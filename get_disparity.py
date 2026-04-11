@@ -1,4 +1,4 @@
-import subprocess
+from raftstereo import run_model
 
 def get_disparity(left_img, right_img):
     """
@@ -8,15 +8,7 @@ def get_disparity(left_img, right_img):
         - right_img(uint8): the right rgb image
     """ 
     save_images(left_img, right_img)
-    subprocess.run([
-        "python", "raftsterao/demo.py",
-        "--restore_ckpt", "models/raftstereo-middlebury.pth",
-        "--corr_implementation", "alt",
-        "--save_numpy",
-        "--mixed_precision",
-        "-l", "../images/left.png",
-        "-r", "../images/right.png"
-    ])
+    disparity_map = run_model("images/left.png", "images/right.png")
 
 def save_images(left_img, right_img):
     cv2.imsave("images/left.png", left_img)
