@@ -49,7 +49,7 @@ def demo(args):
 
             file_stem = imfile1.split('/')[-2]
             if args.save_numpy:
-                np.save(output_directory / f"{file_stem}.npy", flow_up.cpu().numpy().squeeze())
+                np.save(output_directory / f"disparity.npy", flow_up.cpu().numpy().squeeze())
             plt.imsave(output_directory / f"{file_stem}.png", -flow_up.cpu().numpy().squeeze(), cmap='jet')
 
 
