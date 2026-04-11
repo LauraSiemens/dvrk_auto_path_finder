@@ -7,6 +7,8 @@ from PIL import Image
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
+from tf2_ros import Buffer, TransformListener
+import tf_transformations
 
 class PathPublisher(Node):
 
@@ -19,6 +21,9 @@ class PathPublisher(Node):
             'next_coordinate',
             10
         )
+        
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
 
         # define start_pos, disparity_map, and rgb_image_L
         self.image_to_coodinates(start_pos, disparity_map, rgb_image_L)
@@ -133,9 +138,19 @@ class PathPublisher(Node):
             cam_coord(np.array): array representing a point (x,y,z) in the camera frame, in meters
         Returns: coordinate (x,y,z) in meters in the world frame as an np.array 
         """
-        tranformation_matrix = simros2.getObjectMatrix(cameraHandle, sim.handle_inverse)
-        R = tranformation_matrix[:3, :3]
-        t = tranformation_matrix[:3, 3]
+
+        qx = -0.662965337815252
+        qy = -0.6403711031178091
+        qz = -0.26785100317691796
+        qw = -0.28045971412006343
+
+        tx = -1.5620065838424029
+        ty = -0.004288581503827216
+        tz = 0.8126686641282106
+
+        R = tf_transformations.quaternion_matrix([qx, qy, qz, qw])[:3, :3]
+        t = np.array([tx, ty, tz])
+
         return np.dot(R, cam_coord) + t
 
 def main():
