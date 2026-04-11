@@ -1,1 +1,0 @@
-python demo.py --restore_ckpt models/raftstereo-middlebury.pth --corr_implementation alt --mixed_precision -l=../images/s_0000_L.png -r=../images/s_0000_R.png
