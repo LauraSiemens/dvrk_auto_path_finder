@@ -27,10 +27,12 @@ class PathPublisher(Node):
         
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
+        
+        # define start_pos, disparity_map, and rgb_image_L
         rgb_image_L, rgb_image_R = get_images()
         disparity_map = cv2.absdiff(rgb_image_L, rgb_image_R).astype(np.double)
-        start_pos = (x,y,z) #define point of our choosing PLACEHOLDER
-        # define start_pos, disparity_map, and rgb_image_L
+        start_pos = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
+        
         self.image_to_coordinates(start_pos, disparity_map, rgb_image_L)
 
     def image_to_coordinates(self, start_pos, disparity_map, rgb_image_L):
