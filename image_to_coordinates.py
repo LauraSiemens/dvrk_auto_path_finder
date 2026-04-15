@@ -50,6 +50,7 @@ class PathPublisher(Node):
         start_coord_L = tuple(sum(coord) for coord in zip(start_pos, (10, 10)))
         all_coords_L = [start_pos]
         all_coords_L.append(self.get_next_coord(path_img_L, start_coord_L, start_pos))
+        pose_array = []
         while all_coords_L[-1] != (0, 0):
             next_coord = self.get_next_coord(path_img_L, all_coords_L[-2], all_coords_L[-1])
             all_coords_L.append(next_coord)
@@ -57,8 +58,13 @@ class PathPublisher(Node):
             pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
             qtrn = Quaternion()
             pose = Pose(position=pnt, orientation=qtrn)
-            self.publisher.publish(pose)
-            self.get_logger().info(f"Publishing: {pose}")
+            pose_array.append(pose)
+
+        msg = PoseArray()
+        msg.poses = pose_array
+
+        self.publisher.publish(msg)
+        self.get_logger().info(f"Publishing: {msg.poses}")
 
     def get_threshold_image(self, img_rgb):
 
