@@ -1,4 +1,11 @@
 coppeliasim-zmqremoteapi-client
 pyyaml
-numpy
+numpy==1.26.4
 opencv-python
+transfroms3d
+matplotlib
+pillow
+torch
+tqdm
+opt_einsum
+scipy
