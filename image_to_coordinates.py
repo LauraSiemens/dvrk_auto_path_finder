@@ -64,7 +64,7 @@ class PathPublisher(Node):
         next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_pos, disparity_map))
         last_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_coord_L, disparity_map))
 
-        k_vector = next_world_coord - last_world_coord
+        k_vector = np.array(next_world_coord) - np.array(last_world_coord)
         k_vector = k_vector / np.linalg.norm(k_vector)
 
         rot_matrix, RMSD = R.align_vectors([k_vector], [[0,0,1]])
@@ -81,7 +81,7 @@ class PathPublisher(Node):
             last_world_coord = next_world_coord
             next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(next_coord, disparity_map))
             
-            k_vector = next_world_coord - last_world_coord
+            k_vector = np.array(next_world_coord) - np.array(last_world_coord)
             k_vector = k_vector / np.linalg.norm(k_vector)
 
             rot_matrix, rmsd = R.align_vectors([k_vector], [[0,0,1]])
