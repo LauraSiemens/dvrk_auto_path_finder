@@ -24,7 +24,7 @@ def load_image(imfile):
 
 def run_model(left_im_path, right_im_path):
     args = SimpleNamespace(
-        restore_ckpt="models/raftstereo-middlebury.pth",
+        restore_ckpt="raftstereo/models/raftstereo-middlebury.pth",
         corr_implementation="reg",
         left_img=left_im_path,
         right_img=right_im_path,
@@ -52,8 +52,8 @@ def run_model(left_im_path, right_im_path):
     output_directory.mkdir(exist_ok=True)
 
     with torch.no_grad():
-        image1 = load_image(left_img)
-        image2 = load_image(right_img)
+        image1 = load_image(args.left_img)
+        image2 = load_image(args.right_img)
 
         padder = InputPadder(image1.shape, divis_by=32)
         image1, image2 = padder.pad(image1, image2)
@@ -61,7 +61,7 @@ def run_model(left_im_path, right_im_path):
         _, flow_up = model(image1, image2, iters=args.valid_iters, test_mode=True)
         flow_up = padder.unpad(flow_up).squeeze()
 
-        file_stem = imfile1.split('/')[-2]
+        #file_stem = imfile1.split('/')[-2]
         # np.save(output_directory / "disparity.npy", flow_up.cpu().numpy().squeeze())
         # plt.imsave(output_directory / f"{file_stem}.png", -flow_up.cpu().numpy().squeeze(), cmap='jet')
         return flow_up.cpu().numpy().squeeze()
