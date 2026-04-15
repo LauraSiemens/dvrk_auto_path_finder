@@ -14,8 +14,10 @@ from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
 from tf2_ros import Buffer, TransformListener
 from get_disparity import get_disparity
 from transforms3d.quaternions import quat2mat
-
 from get_start_pos import get_start_pos
+from scipy.spatial.transform import Rotation as R
+
+
 class PathPublisher(Node):
 
     def __init__(self):
@@ -58,14 +60,34 @@ class PathPublisher(Node):
         start_coord_L = tuple(sum(coord) for coord in zip(start_pos, (10, 10)))
         all_coords_L = [start_pos]
         all_coords_L.append(self.get_next_coord(path_img_L, start_coord_L, start_pos))
-        pose_array = []
+        next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_pos, disparity_map))
+        last_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_coord_L, disparity_map))
+
+        k_vector = next_world_coord - last_world_coord
+        k_vector = k_vector / np.linalg.norm(k_vector)
+
+        rot_matrix = R.align_vectors(k_vector, [0,0,1])
+        quat = R.from_matrix(rot_matrix).as_quat()
+
+        pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
+        qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
+        pose_array = [Pose(position=pnt, orientation=qtrn)]
+
         while all_coords_L[-1] != (0, 0):
             next_coord = self.get_next_coord(path_img_L, all_coords_L[-2], all_coords_L[-1])
             print('next coord: ', next_coord)
             all_coords_L.append(next_coord)
+            last_world_coord = next_world_coord
             next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(next_coord, disparity_map))
+            
+            k_vector = next_world_coord - last_world_coord
+            k_vector = k_vector / np.linalg.norm(k_vector)
+
+            rot_matrix = R.align_vectors(k_vector, [0,0,1])
+            quat = R.from_matrix(rot_matrix).as_quat()
+            
             pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
-            qtrn = Quaternion()
+            qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
             pose = Pose(position=pnt, orientation=qtrn)
             pose_array.append(pose)
 
