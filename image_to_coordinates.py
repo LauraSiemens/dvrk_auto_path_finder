@@ -12,6 +12,7 @@ from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
 from tf2_ros import Buffer, TransformListener
 import tf_transformations
+import get_disparity
 
 class PathPublisher(Node):
 
@@ -30,7 +31,7 @@ class PathPublisher(Node):
         
         # define start_pos, disparity_map, and rgb_image_L
         rgb_image_L, rgb_image_R = get_images()
-        disparity_map = cv2.absdiff(rgb_image_L, rgb_image_R).astype(np.double)
+        disparity_map = get_disparity(rgb_image_L, rgb_image_R)
         start_pos = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
         
         self.image_to_coordinates(start_pos, disparity_map, rgb_image_L)
