@@ -1,3 +1,5 @@
+from transforms3d.quaternions import quat2mat
+import numpy as np
 def get_start_pos(world_pos):
     return cam_coord_to_pixel(world_coord_to_cam_coord(world_pos))
 def cam_coord_to_pixel(cam_coord):
@@ -35,7 +37,7 @@ def world_coord_to_cam_coord(world_coord):
     tx = -1.5620065838424029
     ty = -0.004288581503827216
     tz = 0.8126686641282106
-    R = tf_transformations.quaternion_matrix([qx, qy, qz, qw])[:3, :3]
+    R = quat2mat([qw, qx, qy, qz])[:3, :3]
     t = np.array([tx, ty, tz])
 
     return R.T @ (world_coord - t)   

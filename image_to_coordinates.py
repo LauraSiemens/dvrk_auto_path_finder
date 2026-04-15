@@ -12,11 +12,10 @@ import message_filters
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
 from tf2_ros import Buffer, TransformListener
-# import tf_transformations
-import get_disparity
+from get_disparity import get_disparity
 from transforms3d.quaternions import quat2mat
 
-
+from get_start_pos import get_start_pos
 class PathPublisher(Node):
 
     def __init__(self):
@@ -24,8 +23,8 @@ class PathPublisher(Node):
 
         # Publisher to the topic your Lua script is listening to
         self.publisher = self.create_publisher(
-            Pose,
-            'next_coordinate',
+            PoseArray,
+            'coordinate_array',
             10
         )
         
@@ -42,8 +41,8 @@ class PathPublisher(Node):
         else:
             print('Generating disparity map...\n')
             disparity_map = get_disparity(rgb_image_L, rgb_image_R)
-        start_pos = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
-        
+        start_pos_world = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
+        start_pos = get_start_pos(start_pos_world)
         self.image_to_coordinates(start_pos, disparity_map, rgb_image_L)
 
     def image_to_coordinates(self, start_pos, disparity_map, rgb_image_L):
@@ -62,6 +61,7 @@ class PathPublisher(Node):
         pose_array = []
         while all_coords_L[-1] != (0, 0):
             next_coord = self.get_next_coord(path_img_L, all_coords_L[-2], all_coords_L[-1])
+            print('next coord: ', next_coord)
             all_coords_L.append(next_coord)
             next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(next_coord, disparity_map))
             pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
@@ -84,7 +84,7 @@ class PathPublisher(Node):
         Returns: black and white image of coppelia camera view (np.uint8)
         """
         diff_allowed = 10
-        copied_img = img_rgb.copy().astype(np.uint8)
+        copied_img = img_rgb.copy().astype(int)
         
 
         for i in range(copied_img.shape[0]):
@@ -101,7 +101,7 @@ class PathPublisher(Node):
                     copied_img[i, j, 2] = 255
         return copied_img.astype(np.uint8)
 
-    def get_next_coord(image, last_coord, current_coord):
+    def get_next_coord(self, image, last_coord, current_coord):
         """
         Finds the next coord in the image to move to.
 
@@ -172,7 +172,7 @@ class PathPublisher(Node):
         next_coord = np.round((coord1 + coord2) / 2).astype(int)
         return tuple(next_coord)
 
-    def pixel_to_cam_coord(pixel_coord, disparity):
+    def pixel_to_cam_coord(self, pixel_coord, disparity):
         """
         takes pixel coordinate and disparity map and gives the corresponding camera coordinate in meters
         Args:
@@ -192,7 +192,7 @@ class PathPublisher(Node):
         Y = -(pixel_coord[1] - c_y) * Z / f_y
         return (np.array((X,Y,Z)))
 
-    def cam_coord_to_world_coord(cam_coord):
+    def cam_coord_to_world_coord(self, cam_coord):
         """
         takes camera coordinate and converts to the corresponding world coordinate
         Args:
