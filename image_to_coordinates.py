@@ -26,7 +26,7 @@ class PathPublisher(Node):
         # Publisher to the topic your Lua script is listening to
         self.publisher = self.create_publisher(
             PoseArray,
-            'coordinate_array',
+            'path_coordinates',
             10
         )
         
