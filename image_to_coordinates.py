@@ -286,8 +286,8 @@ def get_images(args=None):
 
     cv_left_bgr = cv2.cvtColor(cv_left, cv2.COLOR_RGB2BGR)
     cv_right_bgr = cv2.cvtColor(cv_right, cv2.COLOR_RGB2BGR)
-    left_path = f"{save_dir}/left_image.png"
-    right_path = f"{save_dir}/right_image.png"
+    left_path = "image_pngs/left_image.png"
+    right_path = "image_pngs/right_image.png"
     cv2.imwrite(left_path, cv_left_bgr)
     cv2.imwrite(right_path, cv_right_bgr)
     
