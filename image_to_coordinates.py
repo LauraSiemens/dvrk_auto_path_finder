@@ -42,7 +42,8 @@ class PathPublisher(Node):
             disparity_map = np.load(file_path)
         else:
             print('Generating disparity map...\n')
-            disparity_map = get_disparity(rgb_image_L, rgb_image_R)
+            get_disparity(rgb_image_L, rgb_image_R)
+            disparity_map = np.load(file_path)
         start_pos_world = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
         start_pos = get_start_pos(start_pos_world)
         self.image_to_coordinates(start_pos, disparity_map, rgb_image_L)
@@ -66,8 +67,8 @@ class PathPublisher(Node):
         k_vector = next_world_coord - last_world_coord
         k_vector = k_vector / np.linalg.norm(k_vector)
 
-        rot_matrix = R.align_vectors(k_vector, [0,0,1])
-        quat = R.from_matrix(rot_matrix).as_quat()
+        rot_matrix, RMSD = R.align_vectors([k_vector], [[0,0,1]])
+        quat = rot_matrix.as_quat()
 
         pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
         qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
@@ -83,8 +84,8 @@ class PathPublisher(Node):
             k_vector = next_world_coord - last_world_coord
             k_vector = k_vector / np.linalg.norm(k_vector)
 
-            rot_matrix = R.align_vectors(k_vector, [0,0,1])
-            quat = R.from_matrix(rot_matrix).as_quat()
+            rot_matrix, rmsd = R.align_vectors([k_vector], [[0,0,1]])
+            quat = rot_matrix.as_quat()
             
             pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
             qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
@@ -278,9 +279,9 @@ def get_images(args=None):
     
     cv_left = cv2.flip(cv_left, 0) 
     cv_right = cv2.flip(cv_right, 0)
-    # Display the images using OpenCV
-    cv2.imshow('Left Camera', cv_left)
-    cv2.imshow('Right Camera', cv_right)
+    ## Display the images using OpenCV
+    #cv2.imshow('Left Camera', cv_left)
+    #cv2.imshow('Right Camera', cv_right)
     stereo_receiver.destroy_node()
     rclpy.shutdown()
 

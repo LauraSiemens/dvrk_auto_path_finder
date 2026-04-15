@@ -11,9 +11,10 @@ from .core.raft_stereo import RAFTStereo
 from .core.utils.utils import InputPadder
 from PIL import Image
 from matplotlib import pyplot as plt
+from types import SimpleNamespace
 
 
-DEVICE = 'cpu'
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def load_image(imfile):
     img = np.array(Image.open(imfile)).astype(np.uint8)
@@ -24,11 +25,21 @@ def load_image(imfile):
 def run_model(left_im_path, right_im_path):
     args = SimpleNamespace(
         restore_ckpt="models/raftstereo-middlebury.pth",
-        corr_implementation="alt",
+        corr_implementation="reg",
         left_img=left_im_path,
         right_img=right_im_path,
         output_directory="demo_output",
         mixed_precision=True,
+        save_numpy=True,
+        valid_iters=32,
+        hidden_dims=[128]*3,
+        shared_backbone=False,
+        corr_levels=4,
+        corr_radius=4,
+        n_downsample=2,
+        context_norm="batch",
+        slow_fast_gru=False,
+        n_gru_layers=3
     )
     model = torch.nn.DataParallel(RAFTStereo(args), device_ids=[0])
     model.load_state_dict(torch.load(args.restore_ckpt,map_location=torch.device(DEVICE)))
