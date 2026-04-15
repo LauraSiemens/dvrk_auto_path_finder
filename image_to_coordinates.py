@@ -32,20 +32,21 @@ class PathPublisher(Node):
         
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        
-        # define start_pos, disparity_map, and rgb_image_L
-        rgb_image_L, rgb_image_R = get_images()
-        print('get disparity map\n')
-        file_path = Path("raftstereo/demo_output/images.npy")
-        if file_path.is_file():
-            print('Using exsiting disparity map...\n')
-            disparity_map = np.load(file_path)
-        else:
-            print('Generating disparity map...\n')
-            get_disparity(rgb_image_L, rgb_image_R)
-            disparity_map = np.load(file_path)
-        start_pos_world = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
-        start_pos = get_start_pos(start_pos_world)
+        start_pos = [-1.45341, -0.03949, 0.706] #in m
+        start_pos = get_start_pos(start_pos)
+        left_img, right_img = get_images()
+
+        #dont have this function yet but we need it
+        #if disparity map exists in demo_output folder, load it, otherwise generate it and save it to the folder
+        #if os.path.exists('raftstereo/demo_output/images.npy'):
+        #    disparity_map = np.load('raftstereo/demo_output/images.npy')
+        #else:
+        disparity = get_disparity(left_img, right_img) # only generates map
+        disparity_map = np.load('raftstereo/demo_output/images.npy')
+
+        start_pos = start_pos
+        disparity_map = disparity_map
+        rgb_image_L = left_img    
         self.image_to_coordinates(start_pos, disparity_map, rgb_image_L)
 
     def image_to_coordinates(self, start_pos, disparity_map, rgb_image_L):
@@ -283,7 +284,6 @@ def get_images(args=None):
     #cv2.imshow('Left Camera', cv_left)
     #cv2.imshow('Right Camera', cv_right)
     stereo_receiver.destroy_node()
-    rclpy.shutdown()
 
     cv_left_bgr = cv2.cvtColor(cv_left, cv2.COLOR_RGB2BGR)
     cv_right_bgr = cv2.cvtColor(cv_right, cv2.COLOR_RGB2BGR)
@@ -297,12 +297,13 @@ def get_images(args=None):
 def main():
     rclpy.init()
     node = PathPublisher()
-
+    
     try:
         rclpy.spin(node)
+        print('Spinning...')
     except KeyboardInterrupt:
         pass
-
+    print('Shutting down...')
     node.destroy_node()
     rclpy.shutdown()
 
