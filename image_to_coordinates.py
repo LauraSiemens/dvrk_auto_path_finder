@@ -11,8 +11,10 @@ import message_filters
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
 from tf2_ros import Buffer, TransformListener
-import tf_transformations
+# import tf_transformations
 import get_disparity
+from transforms3d.quaternions import quat2mat
+
 
 class PathPublisher(Node):
 
@@ -155,7 +157,8 @@ class PathPublisher(Node):
         ty = -0.004288581503827216
         tz = 0.8126686641282106
 
-        R = tf_transformations.quaternion_matrix([qx, qy, qz, qw])[:3, :3]
+        R = quat2mat([qw, qx, qy, qz])
+        # R = tf_transformations.quaternion_matrix([qx, qy, qz, qw])[:3, :3]
         t = np.array([tx, ty, tz])
 
         return np.dot(R, cam_coord) + t
