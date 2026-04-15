@@ -7,8 +7,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from pathlib import Path
-from raft_stereo import RAFTStereo
-from utils.utils import InputPadder
+from .core.raft_stereo import RAFTStereo
+from .core.utils.utils import InputPadder
 from PIL import Image
 from matplotlib import pyplot as plt
 
@@ -25,7 +25,7 @@ def run_model(left_im_path, right_im_path):
     args = SimpleNamespace(
         restore_ckpt="models/raftstereo-middlebury.pth",
         corr_implementation="alt",
-        left_img=left_im_path
+        left_img=left_im_path,
         right_img=right_im_path,
         output_directory="demo_output",
         mixed_precision=True,

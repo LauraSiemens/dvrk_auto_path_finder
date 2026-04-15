@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import math
 from PIL import Image
+from pathlib import Path
 import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
@@ -33,7 +34,14 @@ class PathPublisher(Node):
         
         # define start_pos, disparity_map, and rgb_image_L
         rgb_image_L, rgb_image_R = get_images()
-        disparity_map = get_disparity(rgb_image_L, rgb_image_R)
+        print('get disparity map\n')
+        file_path = Path("raftstereo/demo_output/images.npy")
+        if file_path.is_file():
+            print('Using exsiting disparity map...\n')
+            disparity_map = np.load(file_path)
+        else:
+            print('Generating disparity map...\n')
+            disparity_map = get_disparity(rgb_image_L, rgb_image_R)
         start_pos = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
         
         self.image_to_coordinates(start_pos, disparity_map, rgb_image_L)
@@ -46,6 +54,7 @@ class PathPublisher(Node):
             disparity_map(np.double): The disparity map from depth detection
             rgb_image_L(np.uint8): Image from the coppelia camera
         """
+        print('Getting path...\n')
         path_img_L = self.get_threshold_image(rgb_image_L)
         start_coord_L = tuple(sum(coord) for coord in zip(start_pos, (10, 10)))
         all_coords_L = [start_pos]
@@ -229,7 +238,8 @@ class StereoVisionReceiver(Node):
         self.right_img = right_img_msg
         
 def get_images(args=None):
-    rclpy.init(args=args)
+    if not rclpy.ok():
+        rclpy.init(args=args)
     stereo_receiver = StereoVisionReceiver()
     cv_left, cv_right, left_info, right_info = None, None, None, None
     while stereo_receiver.left_img is None or stereo_receiver.right_img is None:
