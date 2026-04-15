@@ -232,7 +232,6 @@ class PathPublisher(Node):
         tz = 0.8126686641282106
 
         R = quat2mat([qw, qx, qy, qz])
-        # R = tf_transformations.quaternion_matrix([qx, qy, qz, qw])[:3, :3]
         t = np.array([tx, ty, tz])
 
         return np.dot(R, cam_coord) + t
