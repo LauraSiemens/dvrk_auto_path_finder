@@ -35,7 +35,8 @@ class StereoVisionReceiver(Node):
         self.right_img = right_img_msg
         
 def get_images(args=None):
-    rclpy.init(args=args)
+    if not rclpy.ok():
+        rclpy.init(args=args)
     stereo_receiver = StereoVisionReceiver()
     cv_left, cv_right, left_info, right_info = None, None, None, None
     while stereo_receiver.left_img is None or stereo_receiver.right_img is None:
@@ -47,11 +48,13 @@ def get_images(args=None):
     
     cv_left = cv2.flip(cv_left, 0) 
     cv_right = cv2.flip(cv_right, 0)
-    # Display the images using OpenCV
-    cv2.imshow('Left Camera', cv_left)
-    cv2.imshow('Right Camera', cv_right)
+    ## Display the images using OpenCV
+    #cv2.imshow('Left Camera', cv_left)
+    #cv2.imshow('Right Camera', cv_right)
     stereo_receiver.destroy_node()
     rclpy.shutdown()
+    
+    return cv_left, cv_right
     
     return cv_left, cv_right
 
