@@ -86,38 +86,75 @@ class PathPublisher(Node):
                     copied_img[i, j, 2] = 255
         return copied_img.astype(np.uint8)
 
-    def get_next_coord(self, image, last_coord, current_coord):
+    def get_next_coord(image, last_coord, current_coord):
         """
-        Finds the next coord in the image to move to
+        Finds the next coord in the image to move to.
+
         Args:
-            image(np.uint8): Black and white image of the path
-            last_coord(tuple): tuple of the previous coord of end effector (x,y)
-            current_coord(tuple): tuple of the current coord of end effector (x,y)
-        Returns: tuple of next coordinate
+            image (np.uint8): Black and white image of the path
+            last_coord (tuple): previous coordinate (x, y)
+            current_coord (tuple): current coordinate (x, y)
+
+        Returns:
+            tuple: next coordinate
         """
-        min_dist = 15
-        max_dist = 25
+        min_dist = 10
+        max_dist = 20
 
-        current_direction = (current_coord[0] - last_coord[0], current_coord[1] - last_coord[1])
-        current_angle = np.arctan2(current_direction[1], current_direction[0])
+        cx, cy = current_coord
+        lx, ly = last_coord
 
-        coord_opt_1 = (0, 0)
-        coord_opt_2 = (0, 0)
+        # Current direction
+        dx0 = cx - lx
+        dy0 = cy - ly
+        current_angle = np.arctan2(dy0, dx0)
 
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
-                if image[i, j, 0] == 255:
-                    distance = np.linalg.norm(np.array((j, i)) - np.array(current_coord))
-                    new_direction = (j - current_coord[0], i - current_coord[1])
-                    new_angle = np.arctan2(new_direction[1], new_direction[0])
-                    if distance >= min_dist and distance <= max_dist and (new_angle > current_angle - np.pi/2 and new_angle < current_angle + np.pi/2):
-                        if coord_opt_1 == (0, 0):
-                            coord_opt_1 = (j, i)
-                        else:
-                            coord_opt_2 = (j, i)
+        # Get all white pixels at once
+        white_pixels = np.argwhere(image[:, :, 0] == 255)   # rows, cols = y, x
 
-        next_coord = np.average((np.array(coord_opt_1), np.array(coord_opt_2)), axis=0)
-        next_coord = np.round(next_coord).astype(int)
+        if white_pixels.size == 0:
+            return (0, 0)
+
+        ys = white_pixels[:, 0]
+        xs = white_pixels[:, 1]
+
+        # Vector from current point to each candidate
+        dx = xs - cx
+        dy = ys - cy
+
+        # Distance and agnle masks
+        distances = np.sqrt(dx * dx + dy * dy)
+        dist_mask = (distances >= min_dist) & (distances <= max_dist)
+        angles = np.arctan2(dy, dx)
+        angle_diff = np.arctan2(np.sin(angles - current_angle), np.cos(angles - current_angle))
+        angle_mask = np.abs(angle_diff) < (np.pi / 3)
+
+        # Combined valid candidates
+        valid_mask = dist_mask & angle_mask
+        valid_xs = xs[valid_mask]
+        valid_ys = ys[valid_mask]
+
+        if len(valid_xs) == 0:
+            angles = np.arctan2(dy, dx)
+            angle_diff = np.arctan2(np.sin(angles - current_angle), np.cos(angles - current_angle))
+            angle_mask = np.abs(angle_diff) < (np.pi / 2)
+
+            # Combined valid candidates
+            valid_mask = dist_mask & angle_mask
+            valid_xs = xs[valid_mask]
+            valid_ys = ys[valid_mask]
+
+            if len(valid_xs) == 0:   
+                return (0, 0)
+
+        # Match your old behavior: take first two valid points if available
+        if len(valid_xs) == 1:
+            return (int(valid_xs[0]), int(valid_ys[0]))
+
+        coord1 = np.array([valid_xs[0], valid_ys[0]])
+        coord2 = np.array([valid_xs[-1], valid_ys[-1]])
+
+        next_coord = np.round((coord1 + coord2) / 2).astype(int)
         return tuple(next_coord)
 
     def pixel_to_cam_coord(pixel_coord, disparity):
