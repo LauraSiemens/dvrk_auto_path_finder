@@ -1,43 +1,17 @@
 from transforms3d.quaternions import quat2mat
 import numpy as np
-def get_start_pos(world_pos):
+def world_to_pixel(world_pos):
     return cam_coord_to_pixel(world_coord_to_cam_coord(world_pos))
-def cam_coord_to_pixel(cam_coord):
-    """
-    takes pixel coordinate and disparity map and gives the corresponding camera coordinate in meters
-    Args:
-        mac_coord(tuple): some point in work frame (x,y,z)
-    Returns: coordinate (x,y) in pixels as an np.array 
-    """
-    f_x = 924.2773797458503
-    f_y = 519.9060261070408
+    X_world =  [0.036361380777597985, 0.6988448578557066, 0.7143484546330199, -1.5620065838424029, 0.999330520966789, -0.022534398094745223, -0.0288220534791242, -0.004288581503827216, -0.004044731411661673, 0.7149182229815831, -0.699196377705622, 0.8126686641282106]
 
-    c_x = 640.0
-    c_y = 360.0
+    X_cam = R @ X_world + t
 
-    X, Y, Z = cam_coord
+    X, Y, Z = X_cam
 
-    u = (X * f_x / Z) + c_x
-    v = c_y - (Y * f_y / Z)
+    if Z <= 0:
+        return None
 
-    return (int(u), int(v))
+    u = fx * X / Z + cx
+    v = cy - fy * Y / Z
 
-def world_coord_to_cam_coord(world_coord):
-    """
-    takes world coordinate and gives the corresponding camera coordinate in meters
-    Args:
-        world_coord(tuple): some point in world frame (x,y,z)
-    Returns: coordinate (x,y) in pixels as an np.array 
-    """
-    qx = -0.662965337815252
-    qy = -0.6403711031178091
-    qz = -0.26785100317691796
-    qw = -0.28045971412006343
-
-    tx = -1.5620065838424029
-    ty = -0.004288581503827216
-    tz = 0.8126686641282106
-    R = quat2mat([qw, qx, qy, qz])[:3, :3]
-    t = np.array([tx, ty, tz])
-
-    return R.T @ (world_coord - t)   
+    return np.array([int(u), int(v)])
