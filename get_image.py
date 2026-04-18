@@ -55,6 +55,3 @@ def get_images(args=None):
     rclpy.shutdown()
     
     return cv_left, cv_right
-    
-    return cv_left, cv_right
-
