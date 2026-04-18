@@ -14,7 +14,7 @@ from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
 from tf2_ros import Buffer, TransformListener
 from get_disparity import get_disparity
 from transforms3d.quaternions import quat2mat
-from get_start_pos import get_start_pos
+from get_start_pos import world_to_pixel
 from scipy.spatial.transform import Rotation as R
 
 
@@ -33,7 +33,7 @@ class PathPublisher(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         start_pos = [-1.45341, -0.03949, 0.706] #in m
-        start_pos = get_start_pos(start_pos)
+        start_pos = world_to_pixel(start_pos)
         left_img, right_img = get_images()
 
         #dont have this function yet but we need it
@@ -41,7 +41,7 @@ class PathPublisher(Node):
         #if os.path.exists('raftstereo/demo_output/images.npy'):
         #    disparity_map = np.load('raftstereo/demo_output/images.npy')
         #else:
-        disparity = get_disparity(left_img, right_img) # only generates map
+        #disparity = get_disparity(left_img, right_img) # only generates map
         disparity_map = np.load('raftstereo/demo_output/images.npy')
 
         start_pos = start_pos
@@ -236,7 +236,7 @@ class PathPublisher(Node):
     
         R = M[:, :3]
         t = M[:, 3]
-        world_pos = R @ cam_pos + t
+        world_pos = R @ cam_coord + t
 
         return world_pos
 
