@@ -189,6 +189,7 @@ class PathPublisher(Node):
         baseline = 0.020 # in m
         Z = baseline * f_x / abs(disparity[pixel_coord[1], pixel_coord[0]])
         X = (pixel_coord[0] - c_x) * Z / f_x
+        X *= -1 
         Y = -(pixel_coord[1] - c_y) * Z / f_y
         return (np.array((X,Y,Z)))
 
@@ -200,20 +201,20 @@ class PathPublisher(Node):
         Returns: coordinate (x,y,z) in meters in the world frame as an np.array 
         """
 
-        qx = -0.662965337815252
-        qy = -0.6403711031178091
-        qz = -0.26785100317691796
-        qw = -0.28045971412006343
+        M =  [0.036361380777597985, 0.6988448578557066, 0.7143484546330199, -1.5620065838424029, 0.999330520966789, -0.022534398094745223, -0.0288220534791242, -0.004288581503827216, -0.004044731411661673, 0.7149182229815831, -0.699196377705622, 0.8126686641282106]
+        #focal length in pixels
+        fx = 924.2773797458503
+        fy = 519.9060261070408
+        #image centre
+        cx = 640.0
+        cy = 360.0
+        M = np.array(M).reshape(3, 4)
+    
+        R = M[:, :3]
+        t = M[:, 3]
+        world_pos = R @ cam_pos + t
 
-        tx = -1.5620065838424029
-        ty = -0.004288581503827216
-        tz = 0.8126686641282106
-
-        R = quat2mat([qw, qx, qy, qz])
-        # R = tf_transformations.quaternion_matrix([qx, qy, qz, qw])[:3, :3]
-        t = np.array([tx, ty, tz])
-
-        return np.dot(R, cam_coord) + t
+        return world_pos
 
 class StereoVisionReceiver(Node):
     def __init__(self):
