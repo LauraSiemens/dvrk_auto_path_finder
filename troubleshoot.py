@@ -1,3 +1,23 @@
+
 import numpy as np
 
-M =  [0.036361380777597985, 0.6988448578557066, 0.7143484546330199, -1.5620065838424029, 0.999330520966789, -0.022534398094745223, -0.0288220534791242, -0.004288581503827216, -0.004044731411661673, 0.7149182229815831, -0.699196377705622, 0.8126686641282106]
+import matplotlib.pyplot as plt
+from get_start_pos import world_to_pixel
+import cv2
+start_pos = [-1.45341, -0.03949, 0.706] 
+pixel_start_pos = world_to_pixel(start_pos)
+print(pixel_start_pos)
+img = cv2.imread("image_pngs/left_image.png")
+print(img.shape)
+radius = 5
+color = (0, 0, 255)
+thickness = 5
+copied_img = img.copy()
+cv2.circle(copied_img, pixel_start_pos, radius, color, thickness)
+cv2.imshow('Where on path', copied_img)
+
+# 3. Wait for any key press (0 means wait indefinitely)
+cv2.waitKey(0)
+
+# 4. Clean up and close the window
+cv2.destroyAllWindows()

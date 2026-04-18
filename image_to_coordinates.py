@@ -14,10 +14,8 @@ from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
 from tf2_ros import Buffer, TransformListener
 from get_disparity import get_disparity
 from transforms3d.quaternions import quat2mat
+
 from get_start_pos import get_start_pos
-from scipy.spatial.transform import Rotation as R
-
-
 class PathPublisher(Node):
 
     def __init__(self):
@@ -26,27 +24,25 @@ class PathPublisher(Node):
         # Publisher to the topic your Lua script is listening to
         self.publisher = self.create_publisher(
             PoseArray,
-            'path_coordinates',
+            'coordinate_array',
             10
         )
         
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        start_pos = [-1.45341, -0.03949, 0.706] #in m
-        start_pos = get_start_pos(start_pos)
-        left_img, right_img = get_images()
-
-        #dont have this function yet but we need it
-        #if disparity map exists in demo_output folder, load it, otherwise generate it and save it to the folder
-        #if os.path.exists('raftstereo/demo_output/images.npy'):
-        #    disparity_map = np.load('raftstereo/demo_output/images.npy')
-        #else:
-        disparity = get_disparity(left_img, right_img) # only generates map
-        disparity_map = np.load('raftstereo/demo_output/images.npy')
-
-        start_pos = start_pos
-        disparity_map = disparity_map
-        rgb_image_L = left_img    
+        
+        # define start_pos, disparity_map, and rgb_image_L
+        rgb_image_L, rgb_image_R = get_images()
+        print('get disparity map\n')
+        file_path = Path("raftstereo/demo_output/images.npy")
+        if file_path.is_file():
+            print('Using exsiting disparity map...\n')
+            disparity_map = np.load(file_path)
+        else:
+            print('Generating disparity map...\n')
+            disparity_map = get_disparity(rgb_image_L, rgb_image_R)
+        start_pos_world = (-1.45344,-0.03942,0.706) #defined point to start as defined in scene. position is in world frame coordinates
+        start_pos = get_start_pos(start_pos_world)
         self.image_to_coordinates(start_pos, disparity_map, rgb_image_L)
 
     def image_to_coordinates(self, start_pos, disparity_map, rgb_image_L):
@@ -62,34 +58,14 @@ class PathPublisher(Node):
         start_coord_L = tuple(sum(coord) for coord in zip(start_pos, (10, 10)))
         all_coords_L = [start_pos]
         all_coords_L.append(self.get_next_coord(path_img_L, start_coord_L, start_pos))
-        next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_pos, disparity_map))
-        last_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_coord_L, disparity_map))
-
-        k_vector = np.array(next_world_coord) - np.array(last_world_coord)
-        k_vector = k_vector / np.linalg.norm(k_vector)
-
-        rot_matrix, RMSD = R.align_vectors([k_vector], [[0,0,1]])
-        quat = rot_matrix.as_quat()
-
-        pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
-        qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
-        pose_array = [Pose(position=pnt, orientation=qtrn)]
-
+        pose_array = []
         while all_coords_L[-1] != (0, 0):
             next_coord = self.get_next_coord(path_img_L, all_coords_L[-2], all_coords_L[-1])
             print('next coord: ', next_coord)
             all_coords_L.append(next_coord)
-            last_world_coord = next_world_coord
             next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(next_coord, disparity_map))
-            
-            k_vector = np.array(next_world_coord) - np.array(last_world_coord)
-            k_vector = k_vector / np.linalg.norm(k_vector)
-
-            rot_matrix, rmsd = R.align_vectors([k_vector], [[0,0,1]])
-            quat = rot_matrix.as_quat()
-            
             pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
-            qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
+            qtrn = Quaternion()
             pose = Pose(position=pnt, orientation=qtrn)
             pose_array.append(pose)
 
@@ -234,6 +210,7 @@ class PathPublisher(Node):
         tz = 0.8126686641282106
 
         R = quat2mat([qw, qx, qy, qz])
+        # R = tf_transformations.quaternion_matrix([qx, qy, qz, qw])[:3, :3]
         t = np.array([tx, ty, tz])
 
         return np.dot(R, cam_coord) + t
@@ -280,30 +257,23 @@ def get_images(args=None):
     
     cv_left = cv2.flip(cv_left, 0) 
     cv_right = cv2.flip(cv_right, 0)
-    ## Display the images using OpenCV
-    #cv2.imshow('Left Camera', cv_left)
-    #cv2.imshow('Right Camera', cv_right)
+    # Display the images using OpenCV
+    cv2.imshow('Left Camera', cv_left)
+    cv2.imshow('Right Camera', cv_right)
     stereo_receiver.destroy_node()
-
-    cv_left_bgr = cv2.cvtColor(cv_left, cv2.COLOR_RGB2BGR)
-    cv_right_bgr = cv2.cvtColor(cv_right, cv2.COLOR_RGB2BGR)
-    left_path = "image_pngs/left_image.png"
-    right_path = "image_pngs/right_image.png"
-    cv2.imwrite(left_path, cv_left_bgr)
-    cv2.imwrite(right_path, cv_right_bgr)
+    rclpy.shutdown()
     
     return cv_left, cv_right
 
 def main():
     rclpy.init()
     node = PathPublisher()
-    
+
     try:
         rclpy.spin(node)
-        print('Spinning...')
     except KeyboardInterrupt:
         pass
-    print('Shutting down...')
+
     node.destroy_node()
     rclpy.shutdown()
 
