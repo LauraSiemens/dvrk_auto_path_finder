@@ -24,11 +24,11 @@ def load_image(imfile):
 
 def run_model(left_im_path, right_im_path):
     args = SimpleNamespace(
-        restore_ckpt="/home/jobbinport/dvrk_auto_path_finder/raftstereo/models/raftstereo-middlebury.pth",
+        restore_ckpt="/home/jobbinport/dvrk_auto_path_finder/raftstereo/models/raftstereo-middlebury.pth", ## Replace jobbinport with your username here
         corr_implementation="reg",
         left_img=left_im_path,
         right_img=right_im_path,
-        output_directory="/home/jobbinport/dvrk_auto_path_finder/raftstereo/demo_output/",
+        output_directory="/home/jobbinport/dvrk_auto_path_finder/raftstereo/demo_output/", ## Replace jobbinport with your username here
         mixed_precision=True,
         save_numpy=True,
         valid_iters=32,
