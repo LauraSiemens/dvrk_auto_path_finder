@@ -33,16 +33,21 @@ class PathPublisher(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         start_pos = [-1.45341, -0.03949, 0.706] #in m
+        print("Start pos in world coordinates: ", start_pos)
         start_pos = world_to_pixel(start_pos)
-        left_img, right_img = get_images()
-
+        print("\nStart pos in pixel coordinates: ", start_pos)
+        left_img, right_img, left_path, right_path = get_images() 
+        # print directory contents of image_pngs to check if the images were saved correctly
+        print("\nContents of image_pngs directory:")
+        for filename in os.listdir("image_pngs"):
+            print(filename)
         #dont have this function yet but we need it
         #if disparity map exists in demo_output folder, load it, otherwise generate it and save it to the folder
         #if os.path.exists('raftstereo/demo_output/images.npy'):
         #    disparity_map = np.load('raftstereo/demo_output/images.npy')
         #else:
-        disparity = get_disparity(left_img, right_img) # only generates map
-        disparity_map = np.load('raftstereo/demo_output/images.npy')
+        disparity_map = get_disparity(left_path, right_path) # only generates map from the two png files(saved in get_images) and saves it to raftstereo/demo_output/images.npy
+        #disparity_map = np.load('raftstereo/demo_output/disparity.npy')
 
         start_pos = start_pos
         disparity_map = disparity_map
@@ -77,7 +82,7 @@ class PathPublisher(Node):
 
         while all_coords_L[-1] != (0, 0):
             next_coord = self.get_next_coord(path_img_L, all_coords_L[-2], all_coords_L[-1])
-            print('next coord: ', next_coord)
+            #print('next coord: ', next_coord)
             all_coords_L.append(next_coord)
             last_world_coord = next_world_coord
             next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(next_coord, disparity_map))
@@ -97,7 +102,7 @@ class PathPublisher(Node):
         msg.poses = pose_array
 
         self.publisher.publish(msg)
-        self.get_logger().info(f"Publishing: {msg.poses}")
+        #self.get_logger().info(f"Publishing: {msg.poses}")
 
     def get_threshold_image(self, img_rgb):
 
@@ -204,6 +209,8 @@ class PathPublisher(Node):
             disparity(np.double): The disparity map from depth detection
         Returns: coordinate (x,y,z) in meters in the camera frame as an np.array 
         """
+        print("Disparity", disparity)
+
         #focal length in pixels
         f_x = 924.2773797458503
         f_y = 519.9060261070408
@@ -225,7 +232,6 @@ class PathPublisher(Node):
             cam_coord(np.array): array representing a point (x,y,z) in the camera frame, in meters
         Returns: coordinate (x,y,z) in meters in the world frame as an np.array 
         """
-
         M =  [0.036361380777597985, 0.6988448578557066, 0.7143484546330199, -1.5620065838424029, 0.999330520966789, -0.022534398094745223, -0.0288220534791242, -0.004288581503827216, -0.004044731411661673, 0.7149182229815831, -0.699196377705622, 0.8126686641282106]
         #focal length in pixels
         fx = 924.2773797458503
@@ -280,7 +286,8 @@ def get_images(args=None):
     # Convert ROS2 messages to OpenCV format (BGR8 is standard for OpenCV)
     cv_left = stereo_receiver.bridge.imgmsg_to_cv2(stereo_receiver.left_img, desired_encoding='rgb8')
     cv_right = stereo_receiver.bridge.imgmsg_to_cv2(stereo_receiver.right_img, desired_encoding='rgb8')
-    
+
+
     cv_left = cv2.flip(cv_left, 0) 
     cv_right = cv2.flip(cv_right, 0)
     ## Display the images using OpenCV
@@ -290,12 +297,14 @@ def get_images(args=None):
 
     cv_left_bgr = cv2.cvtColor(cv_left, cv2.COLOR_RGB2BGR)
     cv_right_bgr = cv2.cvtColor(cv_right, cv2.COLOR_RGB2BGR)
+    #cv2.imshow('Left Camera', cv_left_bgr)
+    #cv2.imshow('Right Camera', cv_right_bgr)
     left_path = "image_pngs/left_image.png"
     right_path = "image_pngs/right_image.png"
     cv2.imwrite(left_path, cv_left_bgr)
     cv2.imwrite(right_path, cv_right_bgr)
     
-    return cv_left, cv_right
+    return cv_left_bgr, cv_right_bgr, left_path, right_path
 
 def main():
     rclpy.init()

@@ -24,9 +24,6 @@ def world_to_pixel(world_pos):
     cam_pos[0] *= -1 
 
     X, Y, Z = cam_pos
-    print(X)
-    print(Y)
-    print(Z)
 
     if Z <= 0:
         return None
