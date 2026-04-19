@@ -41,7 +41,7 @@ class PathPublisher(Node):
         #if os.path.exists('raftstereo/demo_output/images.npy'):
         #    disparity_map = np.load('raftstereo/demo_output/images.npy')
         #else:
-        #disparity = get_disparity(left_img, right_img) # only generates map
+        disparity = get_disparity(left_img, right_img) # only generates map
         disparity_map = np.load('raftstereo/demo_output/images.npy')
 
         start_pos = start_pos
@@ -215,6 +215,7 @@ class PathPublisher(Node):
         X = (pixel_coord[0] - c_x) * Z / f_x
         X *= -1 
         Y = -(pixel_coord[1] - c_y) * Z / f_y
+        
         return (np.array((X,Y,Z)))
 
     def cam_coord_to_world_coord(self, cam_coord):
