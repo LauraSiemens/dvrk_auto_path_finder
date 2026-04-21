@@ -40,7 +40,7 @@ class PathPublisher(Node):
         # Publisher to the topic your Lua script is listening to
         self.publisher = self.create_publisher(
             PoseArray,
-            'coordinate_array',
+            'path_coordinates',
             10
         )
         
@@ -55,7 +55,7 @@ class PathPublisher(Node):
         
         #if disparity map exists in demo_output folder, load it, otherwise generate it and save it to the folder
         if os.path.exists('demo_output/disparity.npy'):
-           disparity_map = np.load('demo_output/diparity.npy')
+           disparity_map = np.load('demo_output/disparity.npy')
         else:
 
             ## TO RUN THIS NEXT LINE YOU NEED TO GO TO raftstereo/run_model.py and change the restore_ckpt and output_directory paths to your local paths where you saved the model and where you want the output to be saved. 
