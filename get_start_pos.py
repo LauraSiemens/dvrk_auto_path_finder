@@ -1,7 +1,7 @@
 from transforms3d.quaternions import quat2mat
 import numpy as np
 import yaml
-with open('config.yaml', 'r') as file:
+with open('scene_parameters.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
 camera_matrix = config['camera_matrix']

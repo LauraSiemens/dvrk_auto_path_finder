@@ -18,11 +18,11 @@ from transforms3d.quaternions import quat2mat
 from get_start_pos import world_to_pixel
 from scipy.spatial.transform import Rotation as R
 
-with open('config.yaml', 'r') as file:
+with open('scene_parameters.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
 camera_matrix = config['camera_matrix']
-baseline = condig['baseline']
+baseline = config['baseline']
 #focal legnths
 fx = config['fx']
 fy = config['fy']
