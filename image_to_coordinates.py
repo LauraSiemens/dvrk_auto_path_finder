@@ -53,22 +53,17 @@ class PathPublisher(Node):
         left_img, right_img, left_path, right_path = get_images() 
         # print directory contents of image_pngs to check if the images were saved correctly
         
-        #dont have this function yet but we need it
         #if disparity map exists in demo_output folder, load it, otherwise generate it and save it to the folder
-        #if os.path.exists('raftstereo/demo_output/images.npy'):
-        #    disparity_map = np.load('raftstereo/demo_output/images.npy')
-        #else:
+        if os.path.exists('demo_output/disparity.npy'):
+           disparity_map = np.load('demo_output/diparity.npy')
+        else:
 
-
-
-
-        ## TO RUN THIS NEXT LINE YOU NEED TO GO TO raftstereo/run_model.py and change the restore_ckpt and output_directory paths to your local paths where you saved the model and where you want the output to be saved. 
-        # I have it set to my local paths but you need to change jobbinport to your username in those paths.
-        #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        disparity_map = np.load('demo_output/disparity.npy') # only generates map from the two png files(saved in get_images) and saves it to raftstereo/demo_output/images.npy
-        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        
-        #disparity_map = np.load('raftstereo/demo_output/disparity.npy')
+            ## TO RUN THIS NEXT LINE YOU NEED TO GO TO raftstereo/run_model.py and change the restore_ckpt and output_directory paths to your local paths where you saved the model and where you want the output to be saved. 
+            # I have it set to my local paths but you need to change jobbinport to your username in those paths.
+            #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            disparity_map = get_disparity(left_img, right_img) # only generates map from the two png files(saved in get_images) and saves it to raftstereo/demo_output/images.npy
+            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    
 
         start_pos = start_pos
         disparity_map = disparity_map
