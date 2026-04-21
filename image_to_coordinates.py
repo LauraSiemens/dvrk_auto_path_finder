@@ -3,6 +3,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 import math
+import yaml
 from PIL import Image
 from pathlib import Path
 import rclpy
@@ -16,6 +17,19 @@ from get_disparity import get_disparity
 from transforms3d.quaternions import quat2mat
 from get_start_pos import world_to_pixel
 from scipy.spatial.transform import Rotation as R
+
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+
+camera_matrix = config['camera_matrix']
+baseline = condig['baseline']
+#focal legnths
+fx = config['fx']
+fy = config['fy']
+#camera centre
+cx = config['cx']
+cy = config['cy']
+
 
 
 class PathPublisher(Node):
@@ -240,14 +254,7 @@ class PathPublisher(Node):
             cam_coord(np.array): array representing a point (x,y,z) in the camera frame, in meters
         Returns: coordinate (x,y,z) in meters in the world frame as an np.array 
         """
-        M =  [0.036361380777597985, 0.6988448578557066, 0.7143484546330199, -1.5620065838424029, 0.999330520966789, -0.022534398094745223, -0.0288220534791242, -0.004288581503827216, -0.004044731411661673, 0.7149182229815831, -0.699196377705622, 0.8126686641282106]
-        #focal length in pixels
-        fx = 924.2773797458503
-        fy = 519.9060261070408
-        #image centre
-        cx = 640.0
-        cy = 360.0
-        M = np.array(M).reshape(3, 4)
+        M = np.array(camera_matrix).reshape(3, 4)
     
         R = M[:, :3]
         t = M[:, 3]
