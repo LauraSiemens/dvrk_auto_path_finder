@@ -98,7 +98,6 @@ class PathPublisher(Node):
 
         while all_coords_L[-1] != (0, 0):
             next_coord = self.get_next_coord(path_img_L, all_coords_L[-2], all_coords_L[-1])
-            #print('next coord: ', next_coord)
             all_coords_L.append(next_coord)
             last_world_coord = next_world_coord
             next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(next_coord, disparity_map))
@@ -286,6 +285,9 @@ class StereoVisionReceiver(Node):
         self.right_img = right_img_msg
         
 def get_images(args=None):
+    """
+    Gets images from Coppelia
+    """
     if not rclpy.ok():
         rclpy.init(args=args)
     stereo_receiver = StereoVisionReceiver()
