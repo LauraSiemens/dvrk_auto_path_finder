@@ -26,7 +26,7 @@ class PathPublisher(Node):
         # Publisher to the topic your Lua script is listening to
         self.publisher = self.create_publisher(
             PoseArray,
-            'path_coordinates',
+            'coordinate_array',
             10
         )
         
@@ -51,7 +51,7 @@ class PathPublisher(Node):
         ## TO RUN THIS NEXT LINE YOU NEED TO GO TO raftstereo/run_model.py and change the restore_ckpt and output_directory paths to your local paths where you saved the model and where you want the output to be saved. 
         # I have it set to my local paths but you need to change jobbinport to your username in those paths.
         #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        disparity_map = get_disparity(left_path, right_path) # only generates map from the two png files(saved in get_images) and saves it to raftstereo/demo_output/images.npy
+        disparity_map = np.load('demo_output/disparity.npy') # only generates map from the two png files(saved in get_images) and saves it to raftstereo/demo_output/images.npy
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         
         #disparity_map = np.load('raftstereo/demo_output/disparity.npy')
@@ -104,7 +104,7 @@ class PathPublisher(Node):
             qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
             pose = Pose(position=pnt, orientation=qtrn)
             pose_array.append(pose)
-
+        del all_coords_L[-1] # delete end coordinate that goes to (0,0)
         msg = PoseArray()
         msg.poses = pose_array
 
@@ -225,7 +225,8 @@ class PathPublisher(Node):
         c_x = 640.0
         c_y = 360.0
         baseline = 0.020 # in m
-        Z = baseline * f_x / abs(disparity[pixel_coord[1], pixel_coord[0]])
+        #create depth with adjusted scalign based on initial condition
+        Z = baseline * f_x / (abs(disparity[pixel_coord[1], pixel_coord[0]]))
         X = (pixel_coord[0] - c_x) * Z / f_x
         X *= -1 
         Y = -(pixel_coord[1] - c_y) * Z / f_y
