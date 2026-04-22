@@ -90,7 +90,7 @@ class PathPublisher(Node):
         k_vector = np.array(next_world_coord) - np.array(last_world_coord)
         k_vector = k_vector / np.linalg.norm(k_vector)
 
-        # Calculate quaternion to transform end-effector k_kector to desired k_vector
+        # Calculate quaternion to transform end-effector k_vector to desired k_vector
         rot_matrix, RMSD = R.align_vectors([k_vector], [[0,0,1]])
         quat = rot_matrix.as_quat()
 
@@ -109,7 +109,7 @@ class PathPublisher(Node):
             k_vector = np.array(next_world_coord) - np.array(last_world_coord)
             k_vector = k_vector / np.linalg.norm(k_vector)
 
-            # Calculate quaternion to transform end-effector k_kector to desired k_vector
+            # Calculate quaternion to transform end-effector k_vector to desired k_vector
             rot_matrix, rmsd = R.align_vectors([k_vector], [[0,0,1]])
             quat = rot_matrix.as_quat()
 
