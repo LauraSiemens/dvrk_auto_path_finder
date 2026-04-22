@@ -13,6 +13,12 @@ cx = config['cx']
 cy = config['cy']
 
 def world_to_pixel(world_pos):
+    """
+    Puts world coordintes into pixel values
+    Args:
+        world_pos (tuple): X,Y,Z values in coordinates provided by Coppelia
+    Returns: tuple of pixel value (x,y)
+    """
     M = np.array(camera_matrix).reshape(3, 4)
     
     R = M[:, :3]
