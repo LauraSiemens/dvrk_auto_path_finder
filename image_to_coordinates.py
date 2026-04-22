@@ -86,12 +86,15 @@ class PathPublisher(Node):
         next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_pos, disparity_map))
         last_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(start_coord_L, disparity_map))
 
+        # Calculate desired k_vector of end-effector to keep the ring plane perpendicular to wire path
         k_vector = np.array(next_world_coord) - np.array(last_world_coord)
         k_vector = k_vector / np.linalg.norm(k_vector)
 
+        # Calculate quaternion to transform end-effector k_kector to desired k_vector
         rot_matrix, RMSD = R.align_vectors([k_vector], [[0,0,1]])
         quat = rot_matrix.as_quat()
 
+        # Initialize array with pose of first coordinate, in ROS2 Pose message type
         pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
         qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
         pose_array = [Pose(position=pnt, orientation=qtrn)]
@@ -101,18 +104,22 @@ class PathPublisher(Node):
             all_coords_L.append(next_coord)
             last_world_coord = next_world_coord
             next_world_coord = self.cam_coord_to_world_coord(self.pixel_to_cam_coord(next_coord, disparity_map))
-            
+
+            # Calculate desired k_vector of end-effector to keep the ring plane perpendicular to wire path
             k_vector = np.array(next_world_coord) - np.array(last_world_coord)
             k_vector = k_vector / np.linalg.norm(k_vector)
 
+            # Calculate quaternion to transform end-effector k_kector to desired k_vector
             rot_matrix, rmsd = R.align_vectors([k_vector], [[0,0,1]])
             quat = rot_matrix.as_quat()
-            
+
+            # Append current point to array of all poses
             pnt = Point(x=next_world_coord[0], y=next_world_coord[1], z=next_world_coord[2])
             qtrn = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
             pose = Pose(position=pnt, orientation=qtrn)
             pose_array.append(pose)
         del all_coords_L[-1] # delete end coordinate that goes to (0,0)
+        # Convert array of poses to ROS2 message of type PoseArray to send to CoppeliaSim
         msg = PoseArray()
         msg.poses = pose_array
 
